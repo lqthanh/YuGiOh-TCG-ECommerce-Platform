@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import Header from "../Shared/Header"
-import AdSlider from "../AdSlider/Adslider"
+import AdSlider from "../AdSlider/AdSlider"
 import AllDealsBody from "./AllDealsBody"
 
 function AllDealsClientView() {
