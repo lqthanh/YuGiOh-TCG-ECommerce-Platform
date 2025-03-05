@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using BE._extensions;
 using BE._iservices;
 using BE.Context;
 using BE.InterfaceController;
@@ -140,7 +141,7 @@ namespace BE.Controllers
         [HttpPost("ChangePassword")]
         public async Task<ActionResult> ChangePassword([FromBody] UserChangePasswordInputDto input)
         {
-            var user = await _context.User.SingleOrDefaultAsync(x => x.Username == input.Username);
+            var user = await _context.User.SingleOrDefaultAsync(x => x.Username == User.GetName());
             if (user == null) return BadRequest(new {message = "User not found!"});
             if (user.Password != input.CurrentPassword) return BadRequest(new {message = "Wrong current password!"});
             else
@@ -155,7 +156,7 @@ namespace BE.Controllers
         [HttpPost("ChangeEmail")]
         public async Task<ActionResult> ChangeEmail([FromBody] UserChangeEmailInputDto input)
         {
-            var user = await _context.User.SingleOrDefaultAsync(x => x.Username == input.Username);
+            var user = await _context.User.SingleOrDefaultAsync(x => x.Username == User.GetName());
             if (user == null) return BadRequest(new {message = "User not found!"});
             if (user.Password != input.CurrentPassword) return BadRequest(new {message = "Wrong current password!"});
             if (user.Email != input.CurrentEmail) return BadRequest(new {message = "Wrong current Email!"});
@@ -175,7 +176,7 @@ namespace BE.Controllers
         [HttpPost("ChangeAvatarUrl")]
         public async Task<ActionResult> ChangeAvatarUrl([FromBody] UserChangeAvatarUrlInputDto input)
         {
-            var user = await _context.User.SingleOrDefaultAsync(x => x.Username == input.Username);
+            var user = await _context.User.SingleOrDefaultAsync(x => x.Username == User.GetName());
             if (user == null) return BadRequest(new {message = "User not found!"});
             user.AvatarUrl = input.NewAvatarUrl;
             await _context.SaveChangesAsync();
@@ -186,7 +187,7 @@ namespace BE.Controllers
         [HttpGet("GetInfo")]
         public async Task<ActionResult> GetInfo([FromQuery] string Username)
         {
-            var user = await _context.User.SingleOrDefaultAsync(x => x.Username == Username);
+            var user = await _context.User.SingleOrDefaultAsync(x => x.Username == User.GetName());
             if (user == null) return BadRequest(new {message = "User not found!"});
             return Ok(new {Money = user.Money, Email = user.Email,});
         }

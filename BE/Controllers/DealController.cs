@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BE._extensions;
 using BE._iservices;
 using BE.Context;
 using BE.InterfaceController;
@@ -97,7 +98,7 @@ namespace BE.Controllers
         [HttpGet("GetBoughtDeal")]
         public async Task<ActionResult<List<DealGetBuyedOutputDto>>> GetBoughtDeal([FromQuery] string Username)
         {
-            var user = await _context.User.SingleOrDefaultAsync(u => u.Username == Username);
+            var user = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             if (user == null) return BadRequest(new {message = "User not found!"});
             var deal = from Deal in _context.Deal 
             join User in _context.User on Deal.SellUserId equals User.UserId 
@@ -127,7 +128,7 @@ namespace BE.Controllers
         [HttpGet("GetSoldDeal")]
         public async Task<ActionResult<List<DealGetSelledOutputDto>>> GetSoldDeal([FromQuery] string Username)
         {
-            var user = await _context.User.SingleOrDefaultAsync(u => u.Username == Username);
+            var user = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             if (user == null) return BadRequest(new {message = "User not found!"});
             var deal = from Deal in _context.Deal 
             join User in _context.User on Deal.BuyUserId equals User.UserId 
@@ -157,7 +158,7 @@ namespace BE.Controllers
         [HttpPost("CreateDeal")]
         public async Task<ActionResult> CreateDeal([FromBody] DealCreateInputDto input)
         {
-            var selluser = await _context.User.SingleOrDefaultAsync(u => u.Username == input.SellUsername);
+            var selluser = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             if (selluser == null) return BadRequest(new {message = "User not found!"});
             var usercard = await _context.UserCard.SingleOrDefaultAsync(uc => uc.UserCardId == input.UserCardId);
             if (usercard == null) return BadRequest(new {message = "Your Card not found!"});
@@ -186,7 +187,7 @@ namespace BE.Controllers
         [HttpPut("EditDeal")]
         public async Task<ActionResult> EditDeal([FromBody] DealEditInputDto input)
         {
-            var selluser = await _context.User.SingleOrDefaultAsync(u => u.Username == input.SellUsername);
+            var selluser = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             if (selluser == null) return BadRequest(new {message = "User not found!"});
             var deal = await _context.Deal.SingleOrDefaultAsync(d => d.DealId == input.DealId);
             if (deal == null) return NotFound(new {message = "Deal not found!"});
@@ -211,7 +212,7 @@ namespace BE.Controllers
         [HttpDelete("DeleteDeal")]
         public async Task<ActionResult> DeleteDeal([FromBody] DealDeleteInputDto input)
         {
-            var selluser = await _context.User.SingleOrDefaultAsync(u => u.Username == input.SellUsername);
+            var selluser = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             if (selluser == null) return BadRequest(new {message = "User not found!"});
             var deal = await _context.Deal.SingleOrDefaultAsync(d => d.DealId == input.DealId);
             if (deal == null) return NotFound(new {message = "Deal not found!"});
@@ -229,7 +230,7 @@ namespace BE.Controllers
         [HttpPost("AcceptDeal")]
         public async Task<ActionResult> AcceptDeal([FromBody] DealAcceptInputDto input)
         {
-            var buyuser = await _context.User.SingleOrDefaultAsync(u => u.Username == input.BuyUsername);
+            var buyuser = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             if (buyuser == null) return BadRequest(new {message = "User not found!"});
             var deal = await _context.Deal.SingleOrDefaultAsync(d => d.DealId == input.DealId);
             if (deal == null) return NotFound(new {message = "Deal not found!"});

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BE._extensions;
 using BE.Context;
 using BE.Model.Dto;
 using BE.Model.Entity;
@@ -32,7 +33,7 @@ namespace BE.Controllers
         [HttpGet("Gacha")]
         public async Task<ActionResult<List<GachaOutputDto>>> Gacha([FromQuery] GachaInputDto input)
         {
-            var user = await _context.User.SingleOrDefaultAsync(u => u.Username == input.Username);
+            var user = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             Card randomCard;
             List<Card> allCards = new List<Card>();
             if(input.Pack == "normal")

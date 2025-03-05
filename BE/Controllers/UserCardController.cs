@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BE._extensions;
 using BE.Context;
 using BE.InterfaceController;
 using BE.Model.Dto;
@@ -25,7 +26,7 @@ namespace BE.Controllers
         [HttpGet("SearchOwnedSeparate")]
         public async Task<ActionResult<List<UserCardSearchOwnedOutputDto>>> SearchOwnedSeparate([FromQuery] UserCardSearchOwnedInputDto input)
         {
-            var user = await _context.User.SingleOrDefaultAsync(u => u.Username == input.Username);
+            var user = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             if (user == null) return BadRequest(new { message = "User not found!" });
             var userCard = from UserCard in _context.UserCard
                             join Card in _context.Card on UserCard.CardId equals Card.CardId
@@ -56,7 +57,7 @@ namespace BE.Controllers
         [HttpGet("SearchOwnedStack")]
         public async Task<ActionResult<List<UserCardSearchOwnedOutputDto>>> SearchOwnedStack([FromQuery] UserCardSearchOwnedInputDto input)
         {
-            var user = await _context.User.SingleOrDefaultAsync(u => u.Username == input.Username);
+            var user = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             if (user == null) return BadRequest(new { message = "User not found!" });
             var result = await _context.SearchOwnedOutput
                 .FromSqlRaw("EXEC SearchOwnedStack @UserId, @CardName, @CardTypeName, @CardOriginName, @CardElementName, @CardRarityName",
