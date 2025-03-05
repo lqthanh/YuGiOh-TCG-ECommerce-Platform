@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Mail;
-using BE.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BE.Controllers
@@ -22,7 +21,6 @@ namespace BE.Controllers
                 using (SmtpClient smtpClient = new SmtpClient("smtp.gmail.com"))
                 {
                     smtpClient.Port = 587;
-                    //Truy cập https://myaccount.google.com/lesssecureapps để cho phép ứng dụng kém an toàn, cần là tài khoản đuôi khác @gmail.com
                     smtpClient.Credentials = new NetworkCredential("yourEmailAdress", "yourEmailPassword");
                     smtpClient.EnableSsl = true;
                     // Tạo đối tượng MailMessage để cấu hình email
@@ -35,7 +33,7 @@ namespace BE.Controllers
                     // Gửi email
                     await smtpClient.SendMailAsync(mail);
                 }
-                return Ok(new {message = "Email send successfully, please wait and go check your Email!"});
+                return Ok(new {message = "Email was sent successfully. If you don't see it, check the Spam category as well!"});
             }
             catch (Exception ex)
             {
