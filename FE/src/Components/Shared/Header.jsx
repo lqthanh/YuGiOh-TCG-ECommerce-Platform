@@ -65,7 +65,7 @@ function Header() {
                     {!userData.username ?
                         <Link to={'/login'}>
                             <button className="users-button">
-                                Login
+                                Login / Register
                             </button>
                         </Link>
                         : <img src={userData.avatarURL} className="header-user-avt" onClick={handleClickAvatar} />
