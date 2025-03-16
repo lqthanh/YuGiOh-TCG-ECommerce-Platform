@@ -3,6 +3,16 @@
 
 <head>
   <title>gg</title>
+  <style>
+    #visualizer {
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0);
+      position: fixed;
+      z-index: -1;
+      bottom: 0px;
+    }
+  </style>
 </head>
 
 <body style="background-color: black; color: white;">
@@ -37,11 +47,10 @@
       <input id="volumeInput" type="range" oninput="changeVolume()" style="width: 270px;">
     </p>
 
-    <audio id="myAudio" oncanplay="ganMax()">
+    <audio id="myAudio" oncanplay="ganMax()" crossorigin="anonymous">
       Your browser does not support the audio element.
     </audio>
-
-    <input type="color" oninput="changeBackgroundColor(backgroundColorInput.value)" id="backgroundColorInput">Change background-color
+    <canvas id="visualizer"></canvas>
   </div>
   <script>
     var audio = document.getElementById("myAudio");
@@ -54,8 +63,6 @@
     var textDuration = document.getElementById("textDuration");
 
     var volumeInput = document.getElementById("volumeInput");
-
-    var backgroundColorInput = document.getElementById("backgroundColorInput");
 
     audio.volume = 0.2;
     volumeInput.value = audio.volume * 100;
@@ -94,8 +101,6 @@
 
     function changeVolume() {
       audio.volume = volumeInput.value / 100;
-      console.log(audio.volume)
-      console.log(volumeInput.value)
     }
 
     function mute() {
@@ -105,5 +110,47 @@
     function changeBackgroundColor(input) {
       document.body.style.backgroundColor = input;
     }
+
+    const context = new AudioContext();
+    const src = context.createMediaElementSource(audio);
+    const analyser = context.createAnalyser();
+
+    src.connect(analyser);
+    analyser.connect(context.destination);
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const canvas = document.getElementById('visualizer');
+    const canvasCtx = canvas.getContext('2d');
+
+    function draw() {
+      requestAnimationFrame(draw);
+
+      analyser.getByteFrequencyData(dataArray);
+
+      canvasCtx.fillStyle = 'rgb(0, 0, 0)';
+      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let barHeight;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        barHeight = dataArray[i] / 2;
+
+        canvasCtx.fillStyle = `rgb(${barHeight + 255}, 192, 203)`;
+        canvasCtx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight);
+
+        x += barWidth + 1;
+      }
+    }
+
+    audio.addEventListener('play', () => {
+      context.resume().then(() => {
+        draw();
+      });
+    });
   </script>
+
 </html>
