@@ -11,11 +11,11 @@ namespace BE.InterfaceController
     {
         //[Authorize]
         //[HttpGet("SearchOwnedSeparate")]
-        Task<ActionResult<List<UserCardSearchOwnedOutputDto>>> SearchOwnedSeparate(UserCardSearchOwnedInputDto input);
+        Task<ActionResult<PagedResultDto<UserCardSearchOwnedOutputDto>>> SearchOwnedSeparate(UserCardSearchOwnedInputDto input, int page, int pageSize);
 
         //[Authorize]
         //[HttpGet("SearchOwnedStack")]
-        Task<ActionResult<List<UserCardSearchOwnedOutputDto>>> SearchOwnedStack(UserCardSearchOwnedInputDto input);
+        Task<ActionResult<PagedResultDto<UserCardSearchOwnedOutputDto>>> SearchOwnedStack(UserCardSearchOwnedInputDto input, int page, int pageSize);
 
         //[NonAction]
         Task MakeOnDeal(long UserCardId);

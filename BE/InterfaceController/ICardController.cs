@@ -12,7 +12,7 @@ namespace BE.InterfaceController
     public interface ICardController
     {
         //[HttpGet("SearchCard")]
-        Task<ActionResult<List<CardSearchOutputDto>>> SearchCard(CardSearchInputDto input);
+        Task<ActionResult<PagedResultDto<CardSearchOutputDto>>> SearchCard(CardSearchInputDto input, int page, int pageSize);
 
         //[HttpGet("GetCardType")]
         Task<ActionResult<List<CardType>>> GetCardType();

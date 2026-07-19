@@ -73,19 +73,38 @@ CREATE proc SearchOwnedStack
     @CardTypeName nvarchar(10) = NULL,
     @CardOriginName nvarchar(20) = NULL,
     @CardElementName nvarchar(10) = NULL,
-    @CardRarityName nvarchar(5) = NULL
+    @CardRarityName nvarchar(5) = NULL,
+    @Page int = 1,
+    @PageSize int = 20,
+    @TotalCount int = NULL OUTPUT
 as
 begin
-    select 
-        Card.CardId, 
-        CardName, 
-        CardImageURL, 
-        CardTypeName, 
-        CardOriginName, 
-        CardElementName, 
-        CardRarityName, 
-        OnDeal, 
-        Count(UserId) as Quantity 
+    set @Page = IIF(@Page < 1, 1, @Page);
+    set @PageSize = IIF(@PageSize < 1, 20, IIF(@PageSize > 100, 100, @PageSize));
+
+    declare @OwnedCard table (
+        CardId bigint,
+        CardName nvarchar(60),
+        CardImageURL nvarchar(180),
+        CardTypeName nvarchar(10),
+        CardOriginName nvarchar(20),
+        CardElementName nvarchar(10),
+        CardRarityName nvarchar(5),
+        OnDeal bit,
+        Quantity int
+    );
+
+    insert into @OwnedCard
+    select
+        Card.CardId,
+        CardName,
+        CardImageURL,
+        CardTypeName,
+        CardOriginName,
+        CardElementName,
+        CardRarityName,
+        OnDeal,
+        Count(UserId) as Quantity
     from UserCard right join Card on UserCard.CardId = Card.CardId AND UserCard.UserId = @UserId
     where (UserId = @UserId or UserId IS NULL)
     and (@CardName = '' or @CardName IS NULL or CardName like '%' + @CardName + '%')
@@ -93,6 +112,22 @@ begin
     and (@CardOriginName = '' or @CardOriginName IS NULL or CardOriginName = @CardOriginName)
     and (@CardElementName ='' or @CardElementName IS NULL or CardElementName = @CardElementName)
     and (@CardRarityName = '' or @CardRarityName IS NULL or CardRarityName = @CardRarityName)
-    GROUP by UserId, Card.CardId, CardName, CardImageURL, CardTypeName, CardOriginName, CardElementName, CardRarityName, OnDeal
-    ORDER BY  CardRarityName DESC, CardName, Quantity DESC
+    GROUP by UserId, Card.CardId, CardName, CardImageURL, CardTypeName, CardOriginName, CardElementName, CardRarityName, OnDeal;
+
+    select @TotalCount = COUNT(*) from @OwnedCard;
+
+    select
+        CardId,
+        CardName,
+        CardImageURL,
+        CardTypeName,
+        CardOriginName,
+        CardElementName,
+        CardRarityName,
+        OnDeal,
+        Quantity
+    from @OwnedCard
+    ORDER BY CardRarityName DESC, CardName, Quantity DESC
+    OFFSET (@Page - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY
 end

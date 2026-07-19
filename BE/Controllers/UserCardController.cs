@@ -24,7 +24,7 @@ namespace BE.Controllers
 
         [Authorize]
         [HttpGet("SearchOwnedSeparate")]
-        public async Task<ActionResult<List<UserCardSearchOwnedOutputDto>>> SearchOwnedSeparate([FromQuery] UserCardSearchOwnedInputDto input)
+        public async Task<ActionResult<PagedResultDto<UserCardSearchOwnedOutputDto>>> SearchOwnedSeparate([FromQuery] UserCardSearchOwnedInputDto input, int page = 1, int pageSize = 20)
         {
             var user = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             if (user == null) return BadRequest(new { message = "User not found!" });
@@ -50,23 +50,31 @@ namespace BE.Controllers
                                 OnDeal = UserCard.OnDeal,
                                 Quantity = 1,
                             };
-            return await userCard.ToListAsync();
+            return await userCard.ToPagedResultAsync(page, pageSize);
         }
 
         [Authorize]
         [HttpGet("SearchOwnedStack")]
-        public async Task<ActionResult<List<UserCardSearchOwnedOutputDto>>> SearchOwnedStack([FromQuery] UserCardSearchOwnedInputDto input)
+        public async Task<ActionResult<PagedResultDto<UserCardSearchOwnedOutputDto>>> SearchOwnedStack([FromQuery] UserCardSearchOwnedInputDto input, int page = 1, int pageSize = 20)
         {
             var user = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             if (user == null) return BadRequest(new { message = "User not found!" });
+            (page, pageSize) = QueryableExtensions.NormalizePagination(page, pageSize);
+            var totalCountParam = new SqlParameter("@TotalCount", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output,
+            };
             var result = await _context.SearchOwnedOutput
-                .FromSqlRaw("EXEC SearchOwnedStack @UserId, @CardName, @CardTypeName, @CardOriginName, @CardElementName, @CardRarityName",
+                .FromSqlRaw("EXEC SearchOwnedStack @UserId, @CardName, @CardTypeName, @CardOriginName, @CardElementName, @CardRarityName, @Page, @PageSize, @TotalCount OUTPUT",
                     new SqlParameter("@UserId", user.UserId),
                     new SqlParameter("@CardName", input.CardName ?? ""),
                     new SqlParameter("@CardTypeName", input.CardTypeName ?? ""),
                     new SqlParameter("@CardOriginName", input.CardOriginName ?? ""),
                     new SqlParameter("@CardElementName", input.CardElementName ?? ""),
-                    new SqlParameter("@CardRarityName", input.CardRarityName ?? "")
+                    new SqlParameter("@CardRarityName", input.CardRarityName ?? ""),
+                    new SqlParameter("@Page", page),
+                    new SqlParameter("@PageSize", pageSize),
+                    totalCountParam
                 )
                 .ToListAsync();
             List<UserCardSearchOwnedOutputDto> userCard = new List<UserCardSearchOwnedOutputDto>();
@@ -87,7 +95,13 @@ namespace BE.Controllers
                 };
                 userCard.Add(uc);
             }
-            return userCard;
+            return new PagedResultDto<UserCardSearchOwnedOutputDto>
+            {
+                Items = userCard,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCountParam.Value as int? ?? 0,
+            };
         }
 
         [NonAction]

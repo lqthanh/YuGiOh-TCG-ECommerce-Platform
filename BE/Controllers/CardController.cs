@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BE._extensions;
 using BE.Context;
 using BE.InterfaceController;
 using BE.Model.Dto;
@@ -20,7 +21,7 @@ namespace BE.Controllers
         }
 
         [HttpGet("SearchCard")]
-        public async Task<ActionResult<List<CardSearchOutputDto>>> SearchCard([FromQuery] CardSearchInputDto input)
+        public async Task<ActionResult<PagedResultDto<CardSearchOutputDto>>> SearchCard([FromQuery] CardSearchInputDto input, int page = 1, int pageSize = 20)
         {
             var card = from Card in _context.Card
             where (string.IsNullOrWhiteSpace(input.CardName) || Card.CardName.Contains(input.CardName))
@@ -38,7 +39,7 @@ namespace BE.Controllers
                 CardElementName = Card.CardElementName,
                 CardRarityName = Card.CardRarityName
             };
-            return await card.ToListAsync();
+            return await card.ToPagedResultAsync(page, pageSize);
         }
 
         [HttpGet("GetCardType")]

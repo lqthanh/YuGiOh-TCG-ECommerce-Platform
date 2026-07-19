@@ -31,7 +31,7 @@ namespace BE.Controllers
         }
 
         [HttpGet("SearchDeal")]
-        public async Task<ActionResult<List<DealSearchOutputDto>>> SearchDeal([FromQuery] DealSearchInputDto input, string? sort, bool sortAscending = true)
+        public async Task<ActionResult<PagedResultDto<DealSearchOutputDto>>> SearchDeal([FromQuery] DealSearchInputDto input, string? sort, bool sortAscending = true, int page = 1, int pageSize = 20)
         {
             var user = await _context.User.SingleOrDefaultAsync(u => u.Username == input.MyUsername);
             var deal = from Deal in _context.Deal 
@@ -75,7 +75,7 @@ namespace BE.Controllers
             {
                 deal = sortAscending ? deal.OrderBy(d => d.Price) : deal.OrderByDescending(d => d.Price);
             }
-            return await deal.ToListAsync();
+            return await deal.ToPagedResultAsync(page, pageSize);
         }
 
         [HttpGet("GetCardPrice/{cardId}/{currentYear}")]
@@ -96,7 +96,7 @@ namespace BE.Controllers
 
         [Authorize]
         [HttpGet("GetBoughtDeal")]
-        public async Task<ActionResult<List<DealGetBuyedOutputDto>>> GetBoughtDeal([FromQuery] string Username)
+        public async Task<ActionResult<PagedResultDto<DealGetBuyedOutputDto>>> GetBoughtDeal([FromQuery] string Username, int page = 1, int pageSize = 20)
         {
             var user = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             if (user == null) return BadRequest(new {message = "User not found!"});
@@ -121,12 +121,12 @@ namespace BE.Controllers
                 CreateDate = Deal.CreateDate,
                 AcceptedDate = Deal.AcceptedDate,
             };
-            return await deal.ToListAsync();
+            return await deal.ToPagedResultAsync(page, pageSize);
         }
 
         [Authorize]
         [HttpGet("GetSoldDeal")]
-        public async Task<ActionResult<List<DealGetSelledOutputDto>>> GetSoldDeal([FromQuery] string Username)
+        public async Task<ActionResult<PagedResultDto<DealGetSelledOutputDto>>> GetSoldDeal([FromQuery] string Username, int page = 1, int pageSize = 20)
         {
             var user = await _context.User.SingleOrDefaultAsync(u => u.Username == User.GetName());
             if (user == null) return BadRequest(new {message = "User not found!"});
@@ -151,7 +151,7 @@ namespace BE.Controllers
                 CreateDate = Deal.CreateDate,
                 AcceptedDate = Deal.AcceptedDate,
             };
-            return await deal.ToListAsync();
+            return await deal.ToPagedResultAsync(page, pageSize);
         }
 
         [Authorize]

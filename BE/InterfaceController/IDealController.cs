@@ -10,15 +10,15 @@ namespace BE.InterfaceController
     public interface IDealController
     {
         //[HttpGet("SearchDeal")]
-        Task<ActionResult<List<DealSearchOutputDto>>> SearchDeal(DealSearchInputDto input, string? sort, bool sortAscending);
+        Task<ActionResult<PagedResultDto<DealSearchOutputDto>>> SearchDeal(DealSearchInputDto input, string? sort, bool sortAscending, int page, int pageSize);
 
         //[Authorize]
         //[HttpGet("GetBoughtDeal")]
-        Task<ActionResult<List<DealGetBuyedOutputDto>>> GetBoughtDeal(string Username);
+        Task<ActionResult<PagedResultDto<DealGetBuyedOutputDto>>> GetBoughtDeal(string Username, int page, int pageSize);
 
         //[Authorize]
         //[HttpGet("GetSoldDeal")]
-        Task<ActionResult<List<DealGetSelledOutputDto>>> GetSoldDeal(string Username);
+        Task<ActionResult<PagedResultDto<DealGetSelledOutputDto>>> GetSoldDeal(string Username, int page, int pageSize);
     
         //[Authorize]
         //[HttpPost("CreateDeal")]
