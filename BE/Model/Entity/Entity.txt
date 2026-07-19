@@ -1,1 +1,0 @@
-Entity trong c# liên kết với Entity trong DataBase qua thư viện EntityFrameworkCore.
