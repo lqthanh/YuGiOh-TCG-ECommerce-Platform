@@ -79,13 +79,11 @@ namespace BE.Controllers
         public async Task<ActionResult> ActiveUser(string username, int activeCode)
         {
             string message;
-            string messageImage;
             var user = await _context.User.SingleOrDefaultAsync(u => u.Username == username);
             if (user == null) 
             {
                 message = "URL not found!";
-                messageImage = ApiEnvironment.imageNerd;
-                return Content(await _contentService.ContentWrite(message, messageImage), "text/html");
+                return Content(await _contentService.ContentWrite(message), "text/html");
             }
             if (user.ActiveCode == activeCode)
             {
@@ -93,14 +91,12 @@ namespace BE.Controllers
                 user.ActiveCode = null;
                 await _context.SaveChangesAsync();
                 message = "Active account successfully! You have recieved " + ApiEnvironment.defRegMoney + " RiuCoin! Go To Home Page to use now!";
-                messageImage = ApiEnvironment.imageDeptrai;
-                return Content(await _contentService.ContentWrite(message, messageImage), "text/html");
+                return Content(await _contentService.ContentWrite(message), "text/html");
             }
             else 
             {
                 message = "URL not found!";
-                messageImage = ApiEnvironment.imageNerd;
-                return Content(await _contentService.ContentWrite(message, messageImage), "text/html");
+                return Content(await _contentService.ContentWrite(message), "text/html");
             }
         }
 
