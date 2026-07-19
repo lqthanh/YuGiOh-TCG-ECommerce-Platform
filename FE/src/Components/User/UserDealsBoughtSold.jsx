@@ -1,22 +1,23 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext } from 'react'
 
 import { AppData } from '../../Root';
 import Pagination from '../Shared/Pagination';
+import usePagedFetch from '../../hooks/usePagedFetch';
 
 import './../../styles/User.css'
 
 export default function UserDealsBoughtSold({ type, apiCall, headerArr, renderDealsRow }) {
     const { userData } = useContext(AppData)
 
-    const [list, setList] = useState([]);
-    const [displayList, setDisplayList] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-
-    useEffect(() => {
-        apiCall(userData.username).then((data) => {
-            setList(data)
-        })
-    }, [])
+    const {
+        items: list,
+        currentPage,
+        setCurrentPage,
+        totalPages,
+    } = usePagedFetch(
+        (page, pageSize) => apiCall(userData.username, page, pageSize),
+        10
+    );
 
     return (
         <div className='user-anything-wrapper'>
@@ -38,7 +39,7 @@ export default function UserDealsBoughtSold({ type, apiCall, headerArr, renderDe
                         </div>
                         <div className='line'></div>
                         <div className='user-anything-list-body'>
-                            {displayList.map((deal, dealIndex) => renderDealsRow(deal, dealIndex)).map((row, rowIndex) =>
+                            {list.map((deal, dealIndex) => renderDealsRow(deal, dealIndex)).map((row, rowIndex) =>
                             (<div className='list-row' key={rowIndex}>
                                 {headerArr.map((item, headerIndex) =>
                                     <div key={headerIndex} className={`list-col-${item.key}`}>
@@ -52,7 +53,7 @@ export default function UserDealsBoughtSold({ type, apiCall, headerArr, renderDe
                 }
             </div>
             <div className='user-anything-footer'>
-                <Pagination currentPage={currentPage} setCurrentPage={setCurrentPage} numberItem={10} list={list} setPagedList={setDisplayList} />
+                <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
             </div>
         </div>
     )

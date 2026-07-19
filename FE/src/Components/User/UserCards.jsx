@@ -1,8 +1,9 @@
-import { useContext, useEffect, useState } from "react"
+import { useContext, useState } from "react"
 
 import { Link } from "react-router-dom";
 
 import { getOwnedCardsSeperate, getOwnedCardsStack } from "../../api/apiUserCard";
+import usePagedFetch from "../../hooks/usePagedFetch";
 
 import { AppData } from "../../Root";
 import CardDetails from "../Shared/CardDetails";
@@ -15,13 +16,20 @@ export default function UserCards() {
 
   const { userData } = useContext(AppData)
 
-  const [cardOwned, setCardOwned] = useState([]);
-
-  const [displayCards, setDisplayCards] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [cardSelected, setCardSelected] = useState();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isStack, setIsStack] = useState();
+  const [isStack, setIsStack] = useState(false);
+
+  const {
+    items: cardOwned,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    resetToFirstPage,
+  } = usePagedFetch(
+    (page, pageSize) => (isStack ? getOwnedCardsStack : getOwnedCardsSeperate)(userData.username, {}, page, pageSize),
+    10
+  );
 
   const handleOpenDetail = (card) => {
     if (card.quantity > 0) {
@@ -32,21 +40,8 @@ export default function UserCards() {
 
   const handleToggleViewOption = () => {
     setIsStack(!isStack);
-    setCurrentPage(1);
+    resetToFirstPage();
   }
-
-  useEffect(() => {
-    if (isStack) {
-      getOwnedCardsStack(userData.username).then(data => {
-        setCardOwned(data);
-      })
-    } else {
-      getOwnedCardsSeperate(userData.username).then(data => {
-        setCardOwned(data);
-        setIsStack(false);
-      })
-    }
-  }, [isStack])
 
   return (
     <>
@@ -69,9 +64,9 @@ export default function UserCards() {
           <Link to={'/user/cards'} className="link">Mange your cards</Link>
         </div>
         <div className="user-anything-container">
-          {cardOwned.length ? displayCards.map((card, index) =>
+          {cardOwned.length ? cardOwned.map((card, index) =>
             <ReusableCard card={card} key={index} onClick={() => handleOpenDetail(card)}/>
-          ) : 
+          ) :
             <p className="no-data-text">
               <span>You're not having any cards. Let's </span>
               <Link className="link" to={"/"}>Buy Some</Link>
@@ -81,7 +76,7 @@ export default function UserCards() {
           }
         </div>
         <div className="user-anything-footer">
-          <Pagination currentPage={currentPage} list={cardOwned} numberItem={10} setCurrentPage={setCurrentPage} setPagedList={setDisplayCards} />
+          <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
         </div>
       </div>
       <CardDetails isOpen={isOpen} selectedCard={cardSelected} onClose={() => setIsOpen(false)} />

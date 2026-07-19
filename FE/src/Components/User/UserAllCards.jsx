@@ -8,6 +8,7 @@ import {
 } from "../../api/apiUserCard";
 import { useNavigate } from 'react-router-dom'
 import { checkSession } from "../../utils/checkSession";
+import usePagedFetch from "../../hooks/usePagedFetch";
 
 import SearchAllCards from "../Shared/SearchSelections/SearchAllCards";
 import Pagination from "../Shared/Pagination";
@@ -23,8 +24,6 @@ export default function UserAllCards() {
   const navigate = useNavigate()
 
   const [isStack, setIsStack] = useState(false);
-  const [cards, setCards] = useState([]);
-  const [displayCards, setDisplayCards] = useState([]);
   const [searchObject, setSeachObject] = useState({
     cardName: "",
     cardTypeName: "",
@@ -32,41 +31,26 @@ export default function UserAllCards() {
     cardElementName: "",
     cardRarityName: "",
   });
-  const [currentPage, setCurrentPage] = useState(1);
   const [isOpen, setIsOpen] = useState(false);
   const [isAddingDeal, setIsAddingDeal] = useState(false);
   const [cardSelected, setCardSelected] = useState();
   const [dealPrice, setDealPrice] = useState(0);
 
+  const {
+    items: cards,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    refresh,
+    resetToFirstPage,
+  } = usePagedFetch(
+    (page, pageSize) => (isStack ? getOwnedCardsStack : getOwnedCardsSeperate)(userData.username, searchObject, page, pageSize),
+    15
+  );
+
   const handleToggleViewOption = () => {
     setIsStack(!isStack);
-    setCurrentPage(1)
-  };
-
-  const handleSearchCard = () => {
-    if (isStack) {
-      getOwnedCardsStack(
-        userData.username,
-        searchObject.cardName,
-        searchObject.cardTypeName,
-        searchObject.cardOriginName,
-        searchObject.cardElementName,
-        searchObject.cardRarityName
-      ).then((data) => {
-        setCards(data);
-      });
-    } else {
-      getOwnedCardsSeperate(
-        userData.username,
-        searchObject.cardName,
-        searchObject.cardTypeName,
-        searchObject.cardOriginName,
-        searchObject.cardElementName,
-        searchObject.cardRarityName
-      ).then((data) => {
-        setCards(data);
-      });
-    }
+    resetToFirstPage();
   };
 
   const handleOpenCardDetail = (card) => {
@@ -86,7 +70,7 @@ export default function UserAllCards() {
           setType('toast-success')
           setIsAddingDeal(false)
           setIsOpen(false);
-          handleSearchCard();
+          refresh();
         } else {
           setType('toast-error')
         }
@@ -99,19 +83,8 @@ export default function UserAllCards() {
   useEffect(() => {
     if (!checkSession()) {
       navigate('/')
-      console.log('vai l');
     }
   })
-
-  useEffect(() => {
-    handleSearchCard();
-  }, [isStack]);
-
-  useEffect(() => {
-    getOwnedCardsSeperate(userData.username).then((data) => {
-      setCards(data);
-    });
-  }, []);
 
   return (
     <div className="user-allcards-screen">
@@ -140,11 +113,11 @@ export default function UserAllCards() {
           <SearchAllCards
             searchObject={searchObject}
             setData={setSeachObject}
-            onSearch={handleSearchCard}
+            onSearch={resetToFirstPage}
           />
         </div>
         <div className="user-anything-container">
-          {cards.length ? displayCards.map((card, index) => (
+          {cards.length ? cards.map((card, index) => (
             <ReusableCard
               key={index}
               card={card}
@@ -156,10 +129,8 @@ export default function UserAllCards() {
         </div>
         <Pagination
           currentPage={currentPage}
+          totalPages={totalPages}
           setCurrentPage={setCurrentPage}
-          numberItem={15}
-          list={cards}
-          setPagedList={setDisplayCards}
         />
       </div>
       <FormModal

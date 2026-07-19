@@ -1,13 +1,15 @@
 import { useContext, useEffect, useState } from 'react'
 import Input from '../Shared/Input/Input'
 import SearchAllCards from '../Shared/SearchSelections/SearchAllCards';
+import Pagination from '../Shared/Pagination';
 
 import { getOwnedCardsSeperate } from '../../api/apiUserCard';
+import usePagedFetch from '../../hooks/usePagedFetch';
 import './../../styles/UserAllDeals.css'
 import { AppData } from '../../Root';
 import { createDeal, editDeal } from '../../api/apiDeal';
 
-export default function DealModal({ isOpen, setIsOpen, title, chosingCards, setChosingCards, editedDeal, setEditedDeal, setDeals }) {
+export default function DealModal({ isOpen, setIsOpen, title, editedDeal, setEditedDeal, onSaved }) {
   const { userData, setType, setMessage, showToast } = useContext(AppData)
 
   const [inputValue, setInputValue] = useState('');
@@ -20,18 +22,16 @@ export default function DealModal({ isOpen, setIsOpen, title, chosingCards, setC
     cardRarityName: "",
   });
 
-  const handleSearch = () => {
-    getOwnedCardsSeperate(
-      userData.username,
-      searchObject.cardName,
-      searchObject.cardTypeName,
-      searchObject.cardOriginName,
-      searchObject.cardElementName,
-      searchObject.cardRarityName
-    ).then((data) => {
-      setChosingCards(data);
-    });
-  };
+  const {
+    items: chosingCards,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    resetToFirstPage,
+  } = usePagedFetch(
+    (page, pageSize) => getOwnedCardsSeperate(userData.username, searchObject, page, pageSize),
+    15
+  );
 
   const handleClose = () => {
     setChosenCard({});
@@ -52,7 +52,7 @@ export default function DealModal({ isOpen, setIsOpen, title, chosingCards, setC
         if (response.status === 200) {
           setType('toast-success')
           handleClose();
-          setDeals();
+          onSaved();
           setEditedDeal(undefined);
         } else {
           setType('toast-error')
@@ -71,8 +71,14 @@ export default function DealModal({ isOpen, setIsOpen, title, chosingCards, setC
     }
   }
 
+  // Lay lai danh sach card moi lan mo modal, vi card co the vua duoc dua len deal khac.
   useEffect(() => {
-    console.log('setting init');
+    if (isOpen) {
+      resetToFirstPage();
+    }
+  }, [isOpen, resetToFirstPage])
+
+  useEffect(() => {
     if (editedDeal) {
       setInputValue(editedDeal.price);
       setChosenCard(editedDeal);
@@ -90,7 +96,7 @@ export default function DealModal({ isOpen, setIsOpen, title, chosingCards, setC
               <div className='deal-price-wrapper'>
                 <Input value={inputValue} label={"Enter price for this deal"} type={"number"} setData={setInputValue} />
               </div>
-              <SearchAllCards searchObject={searchObject} setData={setSearchObject} onSearch={handleSearch} />
+              <SearchAllCards searchObject={searchObject} setData={setSearchObject} onSearch={resetToFirstPage} />
             </div>
             <div className='deal-modal-card-choser'>
               {chosingCards.length ? chosingCards.filter(card => filterCards(card)).map(card =>
@@ -100,11 +106,12 @@ export default function DealModal({ isOpen, setIsOpen, title, chosingCards, setC
                     <path fill="#7400cc" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z" />
                   </svg>}
                 </div>
-              ) : 
+              ) :
                 <p className='no-data-text'>Sorry we couldn't find what you wanted :(</p>
               }
             </div>
           </div>
+          <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
           <div className='deal-modal-buttons'>
             <button className='button-2' onClick={handleClose}>Cancel</button>
             <button onClick={handleOK}>OK</button>

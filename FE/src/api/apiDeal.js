@@ -3,30 +3,31 @@ import { HEADER } from "../constants/apiHeaderConfig";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export const searchDeal = async (
-  myUsername = "",
-  sellUsername = "",
-  cardName = "",
-  type = "",
-  origin = "",
-  element = "",
-  rarity = "",
-  priceFrom = "",
-  priceTo = "",
-  dateFrom = "",
-  dateTo = "",
-  sortBy = "",
-  isAsc = false
-) => {
+export const searchDeal = async (filters = {}, page = 1, pageSize = 20) => {
+  const {
+    myUsername = "",
+    sellUsername = "",
+    cardName = "",
+    cardTypeName = "",
+    cardOriginName = "",
+    cardElementName = "",
+    cardRarityName = "",
+    priceFrom = "",
+    priceTo = "",
+    dateFrom = "",
+    dateTo = "",
+    sortBy = "",
+    isAsc = false,
+  } = filters;
   const response = await fetch(
-    `${API_URL}${API_ROUTES.SEARCH_DEAL}?MyUsername=${myUsername}&SellUsername=${sellUsername}&CardName=${cardName}&CardTypeName=${type}&CardOriginName=${origin}&CardElementName=${element}&CardRarityName=${rarity}&PriceFrom=${priceFrom}&PriceTo=${priceTo}&DateFrom=${dateFrom}&DateTo=${dateTo}&sort=${sortBy}&sortAscending=${!!isAsc}`
+    `${API_URL}${API_ROUTES.SEARCH_DEAL}?MyUsername=${myUsername}&SellUsername=${sellUsername}&CardName=${cardName}&CardTypeName=${cardTypeName}&CardOriginName=${cardOriginName}&CardElementName=${cardElementName}&CardRarityName=${cardRarityName}&PriceFrom=${priceFrom}&PriceTo=${priceTo}&DateFrom=${dateFrom}&DateTo=${dateTo}&sort=${sortBy}&sortAscending=${!!isAsc}&page=${page}&pageSize=${pageSize}`
   );
   return response.json();
 };
 
-export const getBoughtDeals = async (username) => {
+export const getBoughtDeals = async (username, page = 1, pageSize = 20) => {
   const response = await fetch(
-    `${API_URL}${API_ROUTES.GET_BOUGHT_DEAL}?Username=${username}`, {
+    `${API_URL}${API_ROUTES.GET_BOUGHT_DEAL}?Username=${username}&page=${page}&pageSize=${pageSize}`, {
       method: 'GET',
       headers: HEADER()
     }
@@ -34,9 +35,9 @@ export const getBoughtDeals = async (username) => {
   return response.json();
 };
 
-export const getSoldDeals = async (username) => {
+export const getSoldDeals = async (username, page = 1, pageSize = 20) => {
   const response = await fetch(
-    `${API_URL}${API_ROUTES.GET_SOLD_DEAL}?Username=${username}`, {
+    `${API_URL}${API_ROUTES.GET_SOLD_DEAL}?Username=${username}&page=${page}&pageSize=${pageSize}`, {
       method: 'GET',
       headers: HEADER()
     }

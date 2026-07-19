@@ -1,8 +1,9 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext } from 'react'
 
 import { searchDeal } from '../../api/apiDeal';
 
 import dateTimeFormat from '../../utils/dateTimeFormat';
+import usePagedFetch from '../../hooks/usePagedFetch';
 
 import { AppData } from '../../Root';
 import { Link } from 'react-router-dom';
@@ -13,15 +14,16 @@ import './../../styles/User.css'
 export default function UserDealsSelling() {
 
   const { userData } = useContext(AppData)
-  const [deals, setDeals] = useState([]);
-  const [displayDeals, setDisplayDeals] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    searchDeal( undefined, userData.username).then(data => {
-      setDeals(data)
-    })
-  }, [])
+  const {
+    items: deals,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+  } = usePagedFetch(
+    (page, pageSize) => searchDeal({ sellUsername: userData.username }, page, pageSize),
+    10
+  );
 
   return (
     <div className="user-anything-wrapper">
@@ -30,7 +32,7 @@ export default function UserDealsSelling() {
         <Link className='link' to="/user/deals">Manage Your Deals</Link>
       </div>
       <div className="user-anything-container">
-        {deals.length ? displayDeals.map((deal) =>
+        {deals.length ? deals.map((deal) =>
           <div className='AllDeals-deals' key={deal.dealId}>
             <div className='AllDeals-cards'>
               <div className={`rarity ${deal.cardRarityName}`}>{deal.cardRarityName}</div>
@@ -49,7 +51,7 @@ export default function UserDealsSelling() {
         }
       </div>
       <div className='user-anything-footer'>
-        <Pagination currentPage={currentPage} setCurrentPage={setCurrentPage} list={deals} numberItem={10} setPagedList={setDisplayDeals} />
+        <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
       </div>
     </div>
   )

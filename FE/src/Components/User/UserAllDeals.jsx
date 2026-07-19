@@ -6,7 +6,7 @@ import { checkSession } from "../../utils/checkSession";
 import dateTimeFormat from "../../utils/dateTimeFormat";
 import priceRangeConfig from "../../utils/priceRangeConfig";
 import dateRangeConfig from "../../utils/dateRangeConfig";
-import { getOwnedCardsSeperate } from '../../api/apiUserCard';
+import usePagedFetch from "../../hooks/usePagedFetch";
 
 import { AppData } from "../../Root";
 import Pagination from "../Shared/Pagination";
@@ -21,14 +21,10 @@ export default function UserAllDeals() {
   const { userData, setType, setMessage, showToast } = useContext(AppData);
   const navigate = useNavigate();
 
-  const [deals, setDeals] = useState([]);
-  const [displayDeals, setDisplayDeals] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedDeal, setSelectedDeal] = useState();
   const [isOpenDetail, setIsOpenDetail] = useState(false);
   const [hoveredDeal, setHoveredDeal] = useState();
   const [editedDeal, setEditedDeal] = useState();
-  const [chosingCards, setChosingCards] = useState([]);
   const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
   const [isOpenDealModal, setIsOpenDealModal] = useState(false);
   const [searchObject, setSearchObject] = useState({
@@ -44,26 +40,24 @@ export default function UserAllDeals() {
     isAsc: false,
   });
 
-  const searchDealOption = () => {
-    setCurrentPage(1);
-    searchDeal(
-      undefined,
-      userData.username,
-      searchObject.cardName,
-      searchObject.cardTypeName,
-      searchObject.cardOriginName,
-      searchObject.cardElementName,
-      searchObject.cardRarityName,
-      priceRangeConfig(searchObject.priceFromTo).valueFrom,
-      priceRangeConfig(searchObject.priceFromTo).valueTo,
-      dateRangeConfig(searchObject.dateFromTo).valueFrom,
-      dateRangeConfig(searchObject.dateFromTo).valueTo,
-      searchObject.sortBy,
-      searchObject.isAsc
-    ).then((data) => {
-      setDeals(data);
-    });
-  };
+  const {
+    items: deals,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    refresh,
+    resetToFirstPage,
+  } = usePagedFetch(
+    (page, pageSize) => searchDeal({
+      ...searchObject,
+      sellUsername: userData.username,
+      priceFrom: priceRangeConfig(searchObject.priceFromTo).valueFrom,
+      priceTo: priceRangeConfig(searchObject.priceFromTo).valueTo,
+      dateFrom: dateRangeConfig(searchObject.dateFromTo).valueFrom,
+      dateTo: dateRangeConfig(searchObject.dateFromTo).valueTo,
+    }, page, pageSize),
+    15
+  );
 
   const handleOpenDetail = (deal) => {
     setIsOpenDetail(true);
@@ -87,7 +81,7 @@ export default function UserAllDeals() {
     response.json().then((data) => {
       if (response.status === 200) {
         setType("toast-success");
-        searchDealOption();
+        refresh();
       } else {
         setType("toast-error");
       }
@@ -100,20 +94,10 @@ export default function UserAllDeals() {
     setHoveredDeal(deal);
   };
 
-  const renderChosingCards = () => {
-    getOwnedCardsSeperate(userData.username).then((data) => {
-      setChosingCards(data);
-    })
-  }
-
   useEffect(() => {
     if (!checkSession()) {
       navigate("/");
     }
-  }, []);
-
-  useEffect(() => {
-    searchDealOption();
   }, []);
 
   useEffect(() => {
@@ -123,11 +107,6 @@ export default function UserAllDeals() {
       }
     }
   }, [isOpenDeleteModal, isOpenDetail]);
-
-  useEffect(() => {
-    renderChosingCards();
-  }, [deals])
-
 
   return (
     <div className="user-screen">
@@ -142,7 +121,7 @@ export default function UserAllDeals() {
               <SearchAllDeals
                 searchObject={searchObject}
                 setData={setSearchObject}
-                onSearch={searchDealOption}
+                onSearch={resetToFirstPage}
                 isManaging
               />
             </div>
@@ -156,58 +135,55 @@ export default function UserAllDeals() {
           </div>
         </div>
         <div className="user-anything-container">
-          {!!deals.length &&
-            displayDeals.map((deal) => (
-              <div
-                className="user-all-deals-deal"
-                key={deal.dealId}
-                onClick={() => handleOpenDetail(deal)}
-                onMouseOver={() => handleHoverDeal(deal)}
-                onMouseOut={() => setHoveredDeal(null)}
-              >
-                {hoveredDeal === deal && (
-                  <div className="edit-delete-deal">
-                    <div className="edit-delete-icon-wrapper">
-                      <div
-                        className="edit icon-5"
-                        onClick={(event) => handleClickEditDeal(event, deal)}
-                      ></div>
-                    </div>
-                    <div className="edit-delete-icon-wrapper">
-                      <div
-                        className="delete icon-5"
-                        onClick={(event) => handleClickDeleteDeal(event, deal)}
-                      ></div>
-                    </div>
+          {deals.map((deal) => (
+            <div
+              className="user-all-deals-deal"
+              key={deal.dealId}
+              onClick={() => handleOpenDetail(deal)}
+              onMouseOver={() => handleHoverDeal(deal)}
+              onMouseOut={() => setHoveredDeal(null)}
+            >
+              {hoveredDeal === deal && (
+                <div className="edit-delete-deal">
+                  <div className="edit-delete-icon-wrapper">
+                    <div
+                      className="edit icon-5"
+                      onClick={(event) => handleClickEditDeal(event, deal)}
+                    ></div>
                   </div>
-                )}
-                <div className="user-all-deals-deal-card">
-                  <div className={`rarity ${deal.cardRarityName}`}>
-                    {deal.cardRarityName}
+                  <div className="edit-delete-icon-wrapper">
+                    <div
+                      className="delete icon-5"
+                      onClick={(event) => handleClickDeleteDeal(event, deal)}
+                    ></div>
                   </div>
-                  <img
-                    src={deal.cardImageURL}
-                    className="user-all-deals-deal-img"
-                  />
                 </div>
-                <div className="AllDeals-bottom">
-                  <div className="AllDeals-price">
-                    <div className="riu-coin-icon icon-9"></div>
-                    <span className="text-sixth">{deal.price}</span>
-                  </div>
-                  <span className="AllDeals-time">
-                    {dateTimeFormat(deal.createDate).date}
-                  </span>
+              )}
+              <div className="user-all-deals-deal-card">
+                <div className={`rarity ${deal.cardRarityName}`}>
+                  {deal.cardRarityName}
                 </div>
+                <img
+                  src={deal.cardImageURL}
+                  className="user-all-deals-deal-img"
+                />
               </div>
-            ))}
+              <div className="AllDeals-bottom">
+                <div className="AllDeals-price">
+                  <div className="riu-coin-icon icon-9"></div>
+                  <span className="text-sixth">{deal.price}</span>
+                </div>
+                <span className="AllDeals-time">
+                  {dateTimeFormat(deal.createDate).date}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
         <Pagination
-          list={deals}
-          numberItem={15}
-          setCurrentPage={setCurrentPage}
-          setPagedList={setDisplayDeals}
           currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
         />
       </div>
       <DealDetails
@@ -236,9 +212,7 @@ export default function UserAllDeals() {
         }
         editedDeal={editedDeal}
         setEditedDeal={setEditedDeal}
-        setDeals={searchDealOption}
-        chosingCards={chosingCards}
-        setChosingCards={setChosingCards}
+        onSaved={refresh}
       />
     </div>
   );

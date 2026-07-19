@@ -1,7 +1,8 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { searchCard } from "../../api/apiCard";
+import usePagedFetch from "../../hooks/usePagedFetch";
 
 import CardDetails from "../Shared/CardDetails";
 import Pagination from "../Shared/Pagination";
@@ -10,10 +11,9 @@ import SearchAllCards from "../Shared/SearchSelections/SearchAllCards";
 import "./../../styles/CardDetails.css";
 import "./../../styles/Body.css";
 
-function Body({ cards, setCards }) {
+function Body() {
   const [isCardDetailsOpen, setCardDetailsOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchObject, setSearchObject] = useState({
     cardName: "",
     cardTypeName: "",
@@ -22,7 +22,16 @@ function Body({ cards, setCards }) {
     cardRarityName: "",
   });
 
-  const [pagedList, setPagedList] = useState([]);
+  const {
+    items: cards,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    resetToFirstPage,
+  } = usePagedFetch(
+    (page, pageSize) => searchCard(searchObject, page, pageSize),
+    10
+  );
 
   const openDetails = (cards) => {
     setSelectedCard(cards);
@@ -33,25 +42,6 @@ function Body({ cards, setCards }) {
     setSelectedCard(null);
     setCardDetailsOpen(false);
   };
-
-  const handleSearch = () => {
-    setCurrentPage(1);
-    searchCard(
-      searchObject.cardName,
-      searchObject.cardTypeName,
-      searchObject.cardOriginName,
-      searchObject.cardElementName,
-      searchObject.cardRarityName
-    ).then((data) => {
-      setCards(data)
-    });
-  };
-
-  useEffect(() => {
-    searchCard().then(data => {
-      setCards(data)
-    })
-  }, []);
 
   return (
     <>
@@ -65,12 +55,12 @@ function Body({ cards, setCards }) {
             <SearchAllCards
               searchObject={searchObject}
               setData={setSearchObject}
-              onSearch={handleSearch}
+              onSearch={resetToFirstPage}
             />
           </div>
           <div className="body-container">
-            {pagedList.length ? (
-              pagedList.map((item, index) => (
+            {cards.length ? (
+              cards.map((item, index) => (
                 <div
                   className="cards"
                   key={index}
@@ -88,7 +78,7 @@ function Body({ cards, setCards }) {
               </p>
             )}
           </div>
-          {<Pagination currentPage={currentPage} list={cards} numberItem={10} setCurrentPage={setCurrentPage} setPagedList={setPagedList} />}
+          {<Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />}
         </div>
       </div>
 

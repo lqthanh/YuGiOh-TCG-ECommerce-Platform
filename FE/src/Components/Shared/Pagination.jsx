@@ -1,14 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-
 import "./../../styles/Pagination.css";
 
-export default function Pagination({ currentPage, list, numberItem, setCurrentPage, setPagedList }) {
-    
-    const finalPage = useMemo(() => Math.ceil(list.length / numberItem), [list]);
+export default function Pagination({ currentPage, totalPages, setCurrentPage }) {
 
     const genarateSibling = () => {
         let result = [];
-        if (finalPage > 7) {
+        if (totalPages > 7) {
             switch (currentPage) {
                 case 1:
                     result = [currentPage + 1, currentPage + 2];
@@ -24,7 +20,7 @@ export default function Pagination({ currentPage, list, numberItem, setCurrentPa
                         currentPage + 1,
                     ];
                     break;
-                case finalPage - 3:
+                case totalPages - 3:
                     result = [
                         currentPage - 1,
                         currentPage,
@@ -32,17 +28,17 @@ export default function Pagination({ currentPage, list, numberItem, setCurrentPa
                         currentPage + 2,
                     ];
                     break;
-                case finalPage - 1:
+                case totalPages - 1:
                     result = [currentPage - 1, currentPage];
                     break;
-                case finalPage:
+                case totalPages:
                     result = [currentPage - 2, currentPage - 1];
                     break;
                 default:
                     result = [currentPage - 1, currentPage, currentPage + 1];
                     break;
             }
-        } else if (finalPage === 7) {
+        } else if (totalPages === 7) {
             if (currentPage <= 2) {
                 result = [2, 3];
             } else if (currentPage === 4) {
@@ -53,15 +49,15 @@ export default function Pagination({ currentPage, list, numberItem, setCurrentPa
                     currentPage + 1,
                     currentPage + 2,
                 ];
-            } else if (currentPage > 2 && currentPage < finalPage - 1) {
+            } else if (currentPage > 2 && currentPage < totalPages - 1) {
                 result = [currentPage - 1, currentPage, currentPage + 1];
-            } else if (currentPage >= finalPage - 1) {
-                result = [finalPage - 2, finalPage - 1];
+            } else if (currentPage >= totalPages - 1) {
+                result = [totalPages - 2, totalPages - 1];
             }
-        } else if (finalPage === 6) {
+        } else if (totalPages === 6) {
             if (currentPage <= 2) {
                 result = [2, 3];
-            } else if (currentPage > 2 && currentPage < finalPage - 1) {
+            } else if (currentPage > 2 && currentPage < totalPages - 1) {
                 result = [2, 3, 4, 5];
             } else {
                 result = [4, 5];
@@ -77,19 +73,14 @@ export default function Pagination({ currentPage, list, numberItem, setCurrentPa
     };
 
     const handleNext = () => {
-        if (currentPage < finalPage) {
+        if (currentPage < totalPages) {
             setCurrentPage(currentPage + 1);
         }
     };
 
-    useEffect(() => {
-        const pagedList = list.slice((currentPage - 1) * numberItem, currentPage * numberItem);
-        setPagedList(pagedList)
-    }, [currentPage, list])
-
     return (
         <>
-            {finalPage > 5 ? (
+            {totalPages > 5 ? (
                 <div className="pagination-bar">
                     <span className="nav-btn text-primary" onClick={handlePrevious}>
                         Previous
@@ -99,7 +90,7 @@ export default function Pagination({ currentPage, list, numberItem, setCurrentPa
                             1
                         </span>
                         {currentPage > 4 && <span className="page-btn">...</span>}
-                        {finalPage > 3 && (
+                        {totalPages > 3 && (
                             <div className="siblings">
                                 {genarateSibling().map((pageNumber, index) => (
                                     <span
@@ -113,27 +104,27 @@ export default function Pagination({ currentPage, list, numberItem, setCurrentPa
                                 ))}
                             </div>
                         )}
-                        {currentPage < finalPage - 3 && (
+                        {currentPage < totalPages - 3 && (
                             <span className="page-btn">...</span>
                         )}
                         <span
-                            className={`page-btn ${currentPage === finalPage && "current-page"
+                            className={`page-btn ${currentPage === totalPages && "current-page"
                                 }`}
-                            onClick={() => setCurrentPage(finalPage)}
+                            onClick={() => setCurrentPage(totalPages)}
                         >
-                            {finalPage}
+                            {totalPages}
                         </span>
                     </div>
                     <span className="nav-btn text-primary" onClick={handleNext}>
                         Next
                     </span>
                 </div>
-            ) : (<>{finalPage > 0 && <div className="pagination-bar">
+            ) : (<>{totalPages > 0 && <div className="pagination-bar">
                 <span className="nav-btn text-primary" onClick={handlePrevious}>
                     Previous
                 </span>
                 <div className="page-numbers">
-                    {Array.from({ length: finalPage }, (_, index) => index + 1).map((item) => (
+                    {Array.from({ length: totalPages }, (_, index) => index + 1).map((item) => (
                         <span
                             className={`page-btn ${currentPage === item && "current-page"}`}
                             key={item}

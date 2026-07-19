@@ -4,6 +4,7 @@ import { acceptDeal, searchDeal } from '../../api/apiDeal'
 import { getMoney } from "../../api/apiUser";
 import dateRangeConfig from './../../utils/dateRangeConfig'
 import priceRangeConfig from "../../utils/priceRangeConfig";
+import usePagedFetch from "../../hooks/usePagedFetch";
 
 import { AppData } from "../../Root";
 import DealDetails from "../Shared/DealDetail";
@@ -13,13 +14,12 @@ import SearchAllDeals from "../Shared/SearchSelections/SearchAllDeals";
 
 import '../../styles/AllDeals.css'
 
-function AllDealsBody({ deals, setDeals }) {
+function AllDealsBody() {
 
     const { userData, setUserData, setType, setMessage, showToast } = useContext(AppData);
 
     const [selectedDeal, setSelectedDeal] = useState();
     const [isDealDetailsOpen, setDealDetailsOpen] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
     const [searchObject, setSearchObject] = useState({
         sellUsername: '',
         cardName: "",
@@ -33,26 +33,25 @@ function AllDealsBody({ deals, setDeals }) {
         isAsc: false,
     });
     const [isConfirmOpen, setConfirmOpen] = useState(false)
-    const [pagedList, setPagedList] = useState([]);
 
-    const searchDealCondition = () => {
-        setCurrentPage(1)
-        searchDeal(userData.username, 
-            searchObject.sellUsername, 
-            searchObject.cardName, 
-            searchObject.cardTypeName, 
-            searchObject.cardOriginName, 
-            searchObject.cardElementName, 
-            searchObject.cardRarityName, 
-            priceRangeConfig(searchObject.priceFromTo).valueFrom, 
-            priceRangeConfig(searchObject.priceFromTo).valueTo, 
-            dateRangeConfig(searchObject.dateFromTo).valueFrom, 
-            dateRangeConfig(searchObject.dateFromTo).valueTo,
-            searchObject.sortBy,
-            searchObject.isAsc).then((data) => {
-            setDeals(data)
-        });
-    }
+    const {
+        items: deals,
+        currentPage,
+        setCurrentPage,
+        totalPages,
+        refresh,
+        resetToFirstPage,
+    } = usePagedFetch(
+        (page, pageSize) => searchDeal({
+            ...searchObject,
+            myUsername: userData.username,
+            priceFrom: priceRangeConfig(searchObject.priceFromTo).valueFrom,
+            priceTo: priceRangeConfig(searchObject.priceFromTo).valueTo,
+            dateFrom: dateRangeConfig(searchObject.dateFromTo).valueFrom,
+            dateTo: dateRangeConfig(searchObject.dateFromTo).valueTo,
+        }, page, pageSize),
+        15
+    );
 
     const openDealDetails = (deals) => {
         setSelectedDeal(deals);
@@ -77,7 +76,7 @@ function AllDealsBody({ deals, setDeals }) {
                             money: money
                         }))
                     })
-                    setDeals(deals.filter(deal => deal.dealId !== selectedDeal.dealId))
+                    refresh();
                 } else {
                     setType('toast-error');
                 }
@@ -98,10 +97,6 @@ function AllDealsBody({ deals, setDeals }) {
     }
 
     useEffect(() => {
-        searchDealCondition();
-    }, [])
-
-    useEffect(() => {
         if (!isConfirmOpen && !isDealDetailsOpen) {
             setSelectedDeal(null)
         }
@@ -116,11 +111,11 @@ function AllDealsBody({ deals, setDeals }) {
                             <span className="text-secondary">Avaiable</span>
                             <span className="text-primary"> Deals</span>
                         </div>
-                        <SearchAllDeals searchObject={searchObject} setData={setSearchObject} onSearch={searchDealCondition} />
+                        <SearchAllDeals searchObject={searchObject} setData={setSearchObject} onSearch={resetToFirstPage} />
                     </div>
                     <div className="AllDeals-body-container">
                         {
-                            pagedList.length ? pagedList.map((item, index) =>
+                            deals.length ? deals.map((item, index) =>
                                 <div className='AllDeals-deals' key={index}>
                                     <div className="AllDeals-cards" onClick={() => openDealDetails(item)}>
                                         <div className={`rarity ${item.cardRarityName}`}>
@@ -141,7 +136,7 @@ function AllDealsBody({ deals, setDeals }) {
                             </p>
                         }
                     </div>
-                    {<Pagination currentPage={currentPage} list={deals} numberItem={15} setCurrentPage={setCurrentPage} setPagedList={setPagedList} />}
+                    {<Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />}
                 </div>
             </div>
             <DealDetails isOpen={isDealDetailsOpen} selectedDeal={selectedDeal} onClose={closeDealDetails} onBuy={() => handleConfirmOpen(selectedDeal)} />
