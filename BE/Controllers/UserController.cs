@@ -13,6 +13,7 @@ using BE.Model.ValueObject;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace BE.Controllers
 {
@@ -22,12 +23,14 @@ namespace BE.Controllers
         private readonly EmailController _email;
         private readonly IContentService _contentService;
         private readonly ITokenService _tokenService;
-        public UserController(DataContext context, EmailController email, IContentService contentService, ITokenService tokenService)
+        private readonly ApiEnvironment _apiEnvironment;
+        public UserController(DataContext context, EmailController email, IContentService contentService, ITokenService tokenService, IOptionsSnapshot<ApiEnvironment> apiEnvironment)
         {
             _context = context;
             _email = email;
             _contentService = contentService;
             _tokenService = tokenService;
+            _apiEnvironment = apiEnvironment.Value;
         }
 
         private async Task<bool> UserExists(string Username)
@@ -55,7 +58,7 @@ namespace BE.Controllers
             {
                 To = input.Email,
                 Subject = "Active your YuGhiOh TCG account",
-                Body = "<h2>Dear " + input.Username + ", click the button to active your account!</h2><a href='http://localhost:5233/api/User/ActiveUser" + "/" + input.Username + "/" + activeCode + "'><button style='width: 200px; height: 40px; background-color: #7400cc; color: white; border-radius: 6px; border: none;'>Click me!!!</button></a>",
+                Body = "<h2>Dear " + input.Username + ", click the button to active your account!</h2><a href='" + _apiEnvironment.ApiURL + "/api/User/ActiveUser" + "/" + input.Username + "/" + activeCode + "'><button style='width: 200px; height: 40px; background-color: #7400cc; color: white; border-radius: 6px; border: none;'>Click me!!!</button></a>",
             });
             if ((int)rs.GetType().GetProperty("StatusCode").GetValue(rs, null) == 200)
             {
@@ -64,7 +67,7 @@ namespace BE.Controllers
                     Username = input.Username.ToLower(),
                     Password = input.Password,
                     Email = input.Email,
-                    Money = ApiEnvironment.defRegMoney,
+                    Money = _apiEnvironment.DefRegMoney,
                     Actived = false,
                     ActiveCode = activeCode,
                     AvatarUrl = "https://res.cloudinary.com/dslzbnfu8/image/upload/v1699185130/samples/DuRiu.png",
@@ -90,7 +93,7 @@ namespace BE.Controllers
                 user.Actived = true;
                 user.ActiveCode = null;
                 await _context.SaveChangesAsync();
-                message = "Active account successfully! You have recieved " + ApiEnvironment.defRegMoney + " RiuCoin! Go To Home Page to use now!";
+                message = "Active account successfully! You have recieved " + _apiEnvironment.DefRegMoney + " RiuCoin! Go To Home Page to use now!";
                 return Content(await _contentService.ContentWrite(message), "text/html");
             }
             else 

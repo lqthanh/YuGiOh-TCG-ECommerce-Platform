@@ -2,6 +2,7 @@ using BE._iservices;
 using BE._services;
 using BE.Context;
 using BE.Controllers;
+using BE.Model.ValueObject;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -13,6 +14,7 @@ namespace BE._extensions
         {
             Services.AddControllers();
             Services.AddCors();
+            Services.Configure<ApiEnvironment>(configuration.GetSection(ApiEnvironment.SectionName));
             Services.AddScoped<EmailController>();
             Services.AddScoped<UserCardController>();
             Services.AddScoped<IContentService, ContentService>();

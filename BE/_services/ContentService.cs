@@ -7,11 +7,18 @@ using BE.Controllers;
 using BE.Model.Entity;
 using BE.Model.ValueObject;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace BE._services
 {
     public class ContentService : IContentService
     {
+        private readonly ApiEnvironment _apiEnvironment;
+        public ContentService(IOptionsSnapshot<ApiEnvironment> apiEnvironment)
+        {
+            _apiEnvironment = apiEnvironment.Value;
+        }
+
         public async Task<string> ContentWrite(string message)
         {
             return 
@@ -29,7 +36,7 @@ namespace BE._services
                 "</head>" + 
                 "<body>" + 
                     "<h1 style='color:#7400CC;'> " + message + "</h1>" + 
-                    "<a href='" + ApiEnvironment.ClientURL + "'>Go To Home Page</a>" + 
+                    "<a href='" + _apiEnvironment.ClientURL + "'>Go To Home Page</a>" +
                 "</body>";
         }
 

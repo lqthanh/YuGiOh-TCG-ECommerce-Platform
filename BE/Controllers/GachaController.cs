@@ -10,6 +10,7 @@ using BE.Model.ValueObject;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
 
 namespace BE.Controllers
@@ -17,16 +18,17 @@ namespace BE.Controllers
     public class GachaController : BaseApiController
     {
         private readonly DataContext _context;
-        private readonly int actualPercent = 100 - ApiEnvironment.discountPercent;
         private readonly int normalPrice;
         private readonly int deluxePrice;
         private readonly int waifuPrice;
-        public GachaController(DataContext context)
+        public GachaController(DataContext context, IOptionsSnapshot<ApiEnvironment> apiEnvironment)
         {
             _context = context;
-            normalPrice = ApiEnvironment.normalPrice*actualPercent/100;
-            deluxePrice = ApiEnvironment.deluxePrice*actualPercent/100;
-            waifuPrice = ApiEnvironment.waifuPrice*actualPercent/100;
+            var env = apiEnvironment.Value;
+            var actualPercent = 100 - env.DiscountPercent;
+            normalPrice = env.NormalPrice*actualPercent/100;
+            deluxePrice = env.DeluxePrice*actualPercent/100;
+            waifuPrice = env.WaifuPrice*actualPercent/100;
         }
 
         [Authorize]
